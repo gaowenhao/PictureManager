@@ -13,6 +13,7 @@
     <script type="text/javascript" src="{{static_url('date-picker/js/bootstrap-datepicker.min.js')}}"></script>
     <script type="text/javascript"
             src="{{static_url('date-picker/locales/bootstrap-datepicker.zh-CN.min.js')}}" charset="utf-8"></script>
+    <script type="text/javascript" src="{{static_url('layer/layer.js')}}"></script>
 
 
     <style type="text/css">
@@ -53,11 +54,23 @@
             background-color: #16A085
         }
 
-        .g-date-picker {
-            width: 150px;
-            height: 28px;
-            border-radius: 0;
-            margin: 0
+        #header {
+            width: 100%;
+            height: 200px;
+        }
+
+        #upload-button {
+            height: 40px;
+            border: none;
+            width: 100px;
+            background-color: #3498db;
+            color: white;
+            transition: all 0.5s linear;
+        }
+
+        #upload-button:hover {
+            transition: all 0.5s linear;
+            background-color: #2980b9
         }
     </style>
     <script type="text/javascript">
@@ -66,13 +79,26 @@
                 format: 'yyyy-mm-dd',
                 autoclose: true,
                 pickerPosition: "bottom-left",
-                language: 'zh-CN'
+                language: 'zh-CN',
+                clearBtn: true
             })
         })
+        function poup_upload_window() {
+            layer.open({
+                type: 2,
+                title: '文件上传',
+                content: '/upload',
+                area: ['1000px', '600px']
+            })
+        }
     </script>
 </head>
 <body>
-<section style="width: 100%; height:200px"></section>
+<section id="header">
+    <p dir="rtl" style="padding:5px;">
+        <span><input id="upload-button" type="button" value="上 传" onclick="poup_upload_window()"/></span>
+    </p>
+</section>
 <section id="container">
     <section id="search-wrapper">
         <section style="text-align: left;margin-left:40px;margin-top:15px;">

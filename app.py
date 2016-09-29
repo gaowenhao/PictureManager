@@ -12,7 +12,8 @@ from view import main_view as mv  # 主控制器简写
 
 def build_application():
     return tornado.web.Application([
-        url(r'/', mv.IndexHandelr)
+        url(r'/', mv.IndexHandelr),
+        url(r'/upload', mv.UploadHandler),
     ], **config.APP_SETTING)
 
 

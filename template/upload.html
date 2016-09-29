@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>文件上传</title>
+</head>
+<body>
+<form id="myForm" action="/upload" method="post" enctype="multipart/form-data">
+    {% module xsrf_form_html() %}
+    <input type='file' name='files' multiple><br/>
+    <input type='submit' value='submit'/>
+</form>
+</body>
+</html>
