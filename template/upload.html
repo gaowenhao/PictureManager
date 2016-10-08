@@ -3,12 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <title>文件上传</title>
+    <link rel="stylesheet" href="{{static_url('bootstrap/css/bootstrap.min.css')}}">
+    <link rel="stylesheet" href="{{static_url('jquery-taginput/jquery.tagsinput.min.css')}}">
+    <link media="all" rel="stylesheet"
+          type="text/css" href="{{static_url('bootstrap-fileupload/css/fileinput.min.css')}}"/>
+
+    <script type="text/javascript" src="{{static_url('jquery-311.min.js')}}"></script>
+    <script type="text/javascript" src="{{static_url('bootstrap/js/bootstrap.min.js')}}"></script>
+    <script src="{{static_url('bootstrap-fileupload/js/fileinput.min.js')}}"></script>
+    <script src="{{static_url('bootstrap-fileupload/js/locales/zh.js')}}"></script>
+    <script type="text/javascript" src="{{static_url('layer/layer.js')}}"></script>
+    <script type="text/javascript" src="{{static_url('jquery-taginput/jquery.tagsinput.min.js')}}"></script>
+
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $("#tags").tagsInput({
+                width: '100%',
+                height: '58px;',
+                defaultText: '添加标签'
+
+            });
+            $('#files').fileinput({
+                language: 'zh',
+                allowedPreviewMimeTypes: ['jpg', 'gif', 'png'],
+                uploadUrl: "/upload",
+                uploadExtraData: function () {  // 动态地添加标签的值
+                    var data = {
+                        tags: $('#tags').val()
+                    };
+                    return data;
+                },
+                previewSettings: {
+                    image: {
+                        width: '100px', height: '100px'
+                    }
+                }
+            })
+        })
+    </script>
+
+    <style type="text/css">
+        #quick_tag span {
+            background-color: #3385FF;
+            color: white;
+            padding: 8px 10px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+    </style>
 </head>
 <body>
-<form id="myForm" action="/upload" method="post" enctype="multipart/form-data">
-    {% module xsrf_form_html() %}
-    <input type='file' name='files' multiple><br/>
-    <input type='submit' value='submit'/>
-</form>
+<input name="files" id="files" type="file" class="file-loading" multiple>
+
+<div style="margin-top: 20px">
+    <input id="tags" name="tags"/>
+</div>
+
+<div id="quick_tag" style="margin-top:10px;">
+    <span onclick="$('#tags').addTag(this.innerHTML)">机械</span>
+    <span onclick="$('#tags').addTag(this.innerHTML)">冰箱</span>
+    <span onclick="$('#tags').addTag(this.innerHTML)">电路</span>
+    <span onclick="$('#tags').addTag(this.innerHTML)">汽车</span>
+    <span onclick="$('#tags').addTag(this.innerHTML)">结构</span>
+    <span onclick="$('#tags').addTag(this.innerHTML)">建筑</span>
+    <span onclick="$('#tags').addTag(this.innerHTML)">电脑</span>
+    <span onclick="$('#tags').addTag(this.innerHTML)">手机</span>
+    <span onclick="$('#tags').addTag(this.innerHTML)">平板</span>
+</div>
 </body>
 </html>

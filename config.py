@@ -9,12 +9,13 @@ import os
 
 PORT = 8000
 
-FILE_UPLOAD_PATH = '/home/vincent/UploadFile'
+# FILE_UPLOAD_PATH = '/home/vincent/UploadFile'
+FILE_UPLOAD_PATH = 'D://UploadFile'
 
 APP_SETTING = {
     'debug': True,
     'static_path': os.path.join(os.path.dirname(__file__), 'static'),
     'template_path': os.path.join(os.path.dirname(__file__), 'template'),
-    "xsrf_cookies": True,
-    'cookie_secret': 'The Art Affect The Word.'
+    # "xsrf_cookies": True,
+    # 'cookie_secret': 'The_Art_Affect_The_Word.'
 }
