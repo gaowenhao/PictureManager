@@ -15,7 +15,6 @@
     <script type="text/javascript"
             src="{{static_url('date-picker/locales/bootstrap-datepicker.zh-CN.min.js')}}" charset="utf-8"></script>
     <script type="text/javascript" src="{{static_url('layer/layer.js')}}"></script>
-
     <script type="text/javascript">
         $(document).ready(function () {
             $(".g-date-picker").datepicker({
@@ -34,6 +33,61 @@
                 area: ['1050px', '600px']
             })
         }
+
+        function search() {
+            var search_text = $("#search-text").val();
+            $.get('/search?search_keys=' + search_text, function (data) {
+                var pictures = eval('(' + data + ')');
+                for (var x = 0; x < pictures.length; x++) {
+                    var img_container = document.getElementById("img_container");
+                    img_container.appendChild(build_vessel(pictures[x]))
+                }
+            })
+        }
+
+        function build_vessel(picture) {
+            var image_vessel = document.createElement("section");
+            image_vessel.className = "image_vessel";
+
+            var a = document.createElement("a");
+            a.href = "/picture/" + picture._id.$oid;
+
+            var image_span = document.createElement("div");
+            image_span.className = "image_span";
+
+
+            var img = document.createElement("img");
+            img.src = "/image/" + picture._id.$oid;
+            img.className = "image";
+
+            var description_span = document.createElement("span");
+            description_span.className = "description_span"
+
+            var p_name = document.createElement("p");
+            p_name.innerHTML = picture.file_name;
+
+            var p_tag = document.createElement("p");
+            p_tag.innerHTML = "标签:" + picture.tag;
+            p_tag.className = "ready_display"
+
+            var p_upload_date = document.createElement("p");
+            p_upload_date.innerHTML = "上传日期:" + picture.upload_date;
+            p_upload_date.className = "ready_display"
+
+            description_span.appendChild(p_name)
+            description_span.appendChild(p_tag)
+            description_span.appendChild(p_upload_date)
+
+            image_span.appendChild(img)
+            image_span.appendChild(description_span)
+
+            a.appendChild(image_span)
+
+
+            image_vessel.appendChild(a)
+
+            return image_vessel
+        }
     </script>
 </head>
 <body>
@@ -46,14 +100,19 @@
     <section id="search-wrapper">
         <section style="text-align: left;margin-top:15px;">
             <input type="text" class="form-control g-date-picker" placeholder="提供起始日期方便检索" readonly
-                   data-date-format="yyyy-MM-dd" value=""/>
+                   data-date-format="yyyy-MM-dd"/>
             -
             <input type="text" class="form-control g-date-picker" placeholder="提供截至日期方便检索" readonly
-                   data-date-format="yyyy-MM-dd" value=""/>
+                   data-date-format="yyyy-MM-dd"/>
         </section>
-        <input id="search-text" type="search" class="form-control" placeholder="请输入搜索关键字"/>
-        <input id="search-button" type="button" value="搜 索"/>
+        <section style="width:100%;height:50px;">
+            <input id="search-text" type="search" class="form-control" placeholder="请输入搜索关键字"/>
+            <input id="search-button" type="button" value="搜 索" onclick="search()"/>
+        </section>
     </section>
+</section>
+<section id="img_container" style="width:1200px;height:600px;margin:30px auto">
+
 </section>
 </body>
 </html>

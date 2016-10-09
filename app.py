@@ -14,6 +14,8 @@ def build_application():
     return tornado.web.Application([
         url(r'/', mv.IndexHandelr),
         url(r'/upload', mv.UploadHandler),
+        url(r'/search', mv.SearchHandler),
+        url(r'/image/(.+)', mv.ImageHandler),
     ], **config.APP_SETTING)
 
 

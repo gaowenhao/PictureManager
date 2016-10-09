@@ -7,13 +7,15 @@
 """
 import os
 
-PORT = 8000
+PORT = 8888
 
 # FILE_UPLOAD_PATH = '/home/vincent/UploadFile'
 FILE_UPLOAD_PATH = 'D://UploadFile'
+PREVIEW_FILE_POSTFIX = '_pre'
 
 APP_SETTING = {
     'debug': True,
+    "autoreload": True,
     'static_path': os.path.join(os.path.dirname(__file__), 'static'),
     'template_path': os.path.join(os.path.dirname(__file__), 'template'),
     # "xsrf_cookies": True,

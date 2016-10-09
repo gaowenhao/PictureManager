@@ -21,13 +21,25 @@
             $("#tags").tagsInput({
                 width: '100%',
                 height: '58px;',
-                defaultText: '添加标签'
+                defaultText: '添加标签',
+                'minChars': 1,
 
             });
+
+            $('#files').on('filebatchuploadsuccess', function (event, data, previewId, index) {
+                var msg = data.response.message
+                // $("#files").fileinput('clear');
+                if (msg == "successful")
+                    layer.msg('全部上传成功')
+                else
+                    layer.msg(msg + " 个文件上传失败")
+            });
+
             $('#files').fileinput({
                 language: 'zh',
                 allowedPreviewMimeTypes: ['jpg', 'gif', 'png'],
                 uploadUrl: "/upload",
+                uploadAsync: false,
                 uploadExtraData: function () {  // 动态地添加标签的值
                     var data = {
                         tags: $('#tags').val()
@@ -38,8 +50,10 @@
                     image: {
                         width: '100px', height: '100px'
                     }
-                }
+                }, allowedPreviewTypes: ['image', 'null', 'null', 'null', 'null', 'null', 'null']
             })
+
+
         })
     </script>
 
