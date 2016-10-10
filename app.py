@@ -16,10 +16,11 @@ def build_application():
         url(r'/upload', mv.UploadHandler),
         url(r'/search', mv.SearchHandler),
         url(r'/image/(.+)', mv.ImageHandler),
+        url(r'/picture/(.+)', mv.PictureHandler),
     ], **config.APP_SETTING)
 
 
 if __name__ == "__main__":
     application = build_application()
-    application.listen(config.PORT)
+    application.listen(config.PORT, max_body_size=50 * 1024 * 1024 * 1024)
     tornado.ioloop.IOLoop.current().start()

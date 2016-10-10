@@ -6,7 +6,6 @@
 """
 from pymongo import MongoClient
 from bson import ObjectId, json_util
-import shutil
 import tornado.escape
 import tornado.web
 import config
@@ -24,13 +23,9 @@ class IndexHandelr(tornado.web.RequestHandler):
 
 class UploadHandler(tornado.web.RequestHandler):
     def get(self):
-        return self.render('upload.html')
-
-    def data_received(self, chunk):
-        pass
+        self.render('upload.html')
 
     # 处理文件上传
-    @tornado.web.asynchronous
     def post(self):
         db = client.picture_manager
         file_metas = self.request.files['files']
@@ -116,12 +111,13 @@ class UploadHandler(tornado.web.RequestHandler):
     # 解析文件大小，并且返回用于现实的字符串
     @staticmethod
     def get_file_length(file):
+        print(len(file))
         length_kb = len(file) / 1024
         if length_kb < 1024:
             return str(length_kb) + "KB"
-        elif length_kb < 10240:
+        elif length_kb < 1024 * 1024:
             return str(length_kb / 1024) + "MB"
-        elif length_kb < 102400:
+        else:
             return str(length_kb / (1024 * 1024)) + "GB"
 
 
@@ -157,5 +153,23 @@ class ImageHandler(tornado.web.RequestHandler):
         db = client.picture_manager
         picture = db.picture.find_one({"_id": image_id})
         self.set_header("content-type", "image/jpg")
-        self.write(open(picture['preview_file_path'], "rb").read())
+        if os.path.exists(picture['preview_file_path']):
+            self.write(open(picture['preview_file_path'], "rb").read())
+        else:
+            self.write(
+                open(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static/internal/404.jpg'), "rb").read())
+        self.finish()
+
+
+class PictureHandler(tornado.web.RequestHandler):
+    @tornado.web.asynchronous
+    def get(self, id):
+        image_id = ObjectId(id)
+        db = client.picture_manager
+        picture = db.picture.find_one({"_id": image_id})
+        if picture:
+            self.render(template_name='picture.html', id=id, tag=picture['tag'], file_name=picture['file_name'],
+                        upload_date=picture['upload_date'])
+        else:
+            self.set_status(404)
         self.finish()

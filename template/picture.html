@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>图片展示页</title>
+    <link rel="stylesheet" href="{{static_url('bootstrap/css/bootstrap.min.css')}}"/>
+    <link rel="stylesheet" href="{{static_url('animate.css')}}"/>
+
+    <script type="text/javascript" src="{{static_url('jquery-311.min.js')}}"></script>
+    <script type="text/javascript" src="{{static_url('bootstrap/js/bootstrap.min.js')}}"></script>
+    <script type="text/javascript" src="{{static_url('layer/layer.js')}}"></script>
+
+    <style type="text/css">
+        * {
+            margin: 0;
+            padding: 0
+        }
+
+        .description p {
+            text-align: center;
+
+        }
+    </style>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            //$('#content').addClass('animated rollIn')
+        })
+    </script>
+</head>
+
+<body>
+<section id="content">
+    <div style="text-align: center;"><img src="/image/{{id}}"></div>
+    <div class="description" id="description">
+        <p>文件名:{{file_name}}</p>
+        <p>标签:{{tag}}</p>
+        <p>上传日期:{{upload_date}}</p>
+
+        <p style="text-align: center;"><a class="btn btn-primary" href="#">下载</a></p>
+    </div>
+</section>
+</body>
+</html>

@@ -24,6 +24,12 @@
                 language: 'zh-CN',
                 clearBtn: true
             })
+
+            $("#search-text").keypress(function (e) {
+                if (e.keyCode == 13) {
+                    search()
+                }
+            })
         })
         function poup_upload_window() {
             layer.open({
@@ -34,6 +40,7 @@
             })
         }
 
+
         function search() {
             var search_text = $("#search-text").val();
             $.get('/search?search_keys=' + search_text, function (data) {
@@ -42,12 +49,17 @@
                     var img_container = document.getElementById("img_container");
                     img_container.appendChild(build_vessel(pictures[x]))
                 }
+
+                $('#img_container > section').on('webkitAnimationEnd mozAnimationEnd MSAnimationEnd oanimationend animationend', function () {
+                    $(this).removeClass('animated')
+                    $(this).addClass("image_vessel_h")
+                });
             })
         }
 
         function build_vessel(picture) {
             var image_vessel = document.createElement("section");
-            image_vessel.className = "image_vessel";
+            image_vessel.className = "image_vessel animated rollIn";
 
             var a = document.createElement("a");
             a.href = "/picture/" + picture._id.$oid;
@@ -82,7 +94,6 @@
             image_span.appendChild(description_span)
 
             a.appendChild(image_span)
-
 
             image_vessel.appendChild(a)
 
