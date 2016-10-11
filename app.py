@@ -17,6 +17,9 @@ def build_application():
         url(r'/search', mv.SearchHandler),
         url(r'/image/(.+)', mv.ImageHandler),
         url(r'/picture/(.+)', mv.PictureHandler),
+        url(r'/download/(.+)', mv.DownHandler),
+        url(r'/login', mv.LoginHandler),
+        url(r'/logout', mv.LogoutHandler),
     ], **config.APP_SETTING)
 
 

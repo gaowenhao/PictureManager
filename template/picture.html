@@ -22,9 +22,6 @@
         }
     </style>
     <script type="text/javascript">
-        $(document).ready(function () {
-            //$('#content').addClass('animated rollIn')
-        })
     </script>
 </head>
 
@@ -36,7 +33,7 @@
         <p>标签:{{tag}}</p>
         <p>上传日期:{{upload_date}}</p>
 
-        <p style="text-align: center;"><a class="btn btn-primary" href="#">下载</a></p>
+        <p style="text-align: center;"><a class="btn btn-primary" href="/download/{{id}}">下载</a></p>
     </div>
 </section>
 </body>

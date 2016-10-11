@@ -31,7 +31,7 @@
                 }
             })
         })
-        function poup_upload_window() {
+        function popup_upload_window() {
             layer.open({
                 type: 2,
                 title: '文件上传',
@@ -40,20 +40,46 @@
             })
         }
 
+        function popup_login_window() {
+            layer.tips('<form action="/login" method="post"><input type="text" class="login_controller" placeholder=" 用户名" name="username" style="color:#34495E"/><input class="login_controller" style="margin-top:5px;color:#34495E" placeholder=" 密码" type="password" name="password"/> <input type="submit" class="header-button" style="width:150px; height:32px;margin-top:3px;"/></form>', "#login-button", {
+                tips: 3,
+                closeBtn: true,
+                time: 0
+            })
+        }
+
 
         function search() {
             var search_text = $("#search-text").val();
-            $.get('/search?search_keys=' + search_text, function (data) {
-                var pictures = eval('(' + data + ')');
-                for (var x = 0; x < pictures.length; x++) {
-                    var img_container = document.getElementById("img_container");
-                    img_container.appendChild(build_vessel(pictures[x]))
+            var start_date = $("#search-wrapper > section input:first-child").val();
+            var end_date = $("#search-wrapper > section input:last-child").val();
+            $.post('/search', {
+                "search_keys": search_text,
+                "start_date": start_date,
+                "end_date": end_date,
+                "page": function () {
+                    var value = $("#go_next input").val()
+                    return value
                 }
+            }, function (data) {
+                var response = eval('(' + data + ')');
+                var message = response.message
+                if (message == "succ") {
+                    for (var x = 0; x < response.data.length; x++) {
+                        var img_container = document.getElementById("img_container");
+                        img_container.appendChild(build_vessel(response.data[x]))
+                    }
 
-                $('#img_container > section').on('webkitAnimationEnd mozAnimationEnd MSAnimationEnd oanimationend animationend', function () {
-                    $(this).removeClass('animated')
-                    $(this).addClass("image_vessel_h")
-                });
+                    $('#img_container > section').on('webkitAnimationEnd mozAnimationEnd MSAnimationEnd oanimationend animationend', function () {
+                        $(this).removeClass('animated')
+                        $(this).addClass("image_vessel_h")
+                    });
+
+                    $("#go_next").css("visibility", "visible")
+                    $("#go_next input").val($("#go_next input").val() + 1)
+                } else {
+                    layer.msg(message)
+                }
             })
         }
 
@@ -103,11 +129,21 @@
 </head>
 <body>
 <section id="header">
-    <p dir="rtl" style="padding:5px;">
-        <span><input id="upload-button" type="button" value="上 传" onclick="poup_upload_window()"/></span>
-    </p>
+    <section style="float:left;padding:5px">
+        {% if not current_user %}
+        <span><input id="login-button" class="header-button" type="button" value="登 录" onclick="popup_login_window()"/></span>
+        {% else %}
+        <span style="font-family: BlameV;font-size:40px">Hello,{{current_user}} </span> <a href="/logout">退出登录</a>
+        {%end%}
+    </section>
+    <section style="float:right;padding:5px;">
+        <input id="upload-button" class="header-button" type="button" value="上 传"
+               onclick="popup_upload_window()"/>
+    </section>
 </section>
 <section id="container">
+    <input type="hidden" id="message"
+           value="{% try %}{{handler.get_argument('message')}}{% except Exception%}{% end %}"/>
     <section id="search-wrapper">
         <section style="text-align: left;margin-top:15px;">
             <input type="text" class="form-control g-date-picker" placeholder="提供起始日期方便检索" readonly
@@ -118,12 +154,24 @@
         </section>
         <section style="width:100%;height:50px;">
             <input id="search-text" type="search" class="form-control" placeholder="请输入搜索关键字"/>
-            <input id="search-button" type="button" value="搜 索" onclick="search()"/>
+            <input id="search-button" type="button" value="搜 索"
+                   onclick="$('#img_container').empty(); $('#go_next input').val(0);search()"/>
         </section>
     </section>
 </section>
-<section id="img_container" style="width:1200px;height:600px;margin:30px auto">
 
-</section>
+<div style="width:1200px;margin: 0 auto;">
+    <section id="img_container"
+             style="width:100%;height:auto !important;height:600px;min-height: 600px;margin-top:30px;overflow: hidden">
+
+    </section>
+
+    <div id="go_next" onclick="search()"
+         style="width:100%;height:35px;line-height: 35px;background-color:#3498DB;text-align: center;color:white;font-size:20px;visibility: hidden">
+        下一页
+        <input type="hidden" value="0"></input>
+    </div>
+</div>
+
 </body>
 </html>

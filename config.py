@@ -12,6 +12,7 @@ PORT = 8888
 # FILE_UPLOAD_PATH = '/home/vincent/UploadFile'
 FILE_UPLOAD_PATH = 'D://UploadFile'
 PREVIEW_FILE_POSTFIX = '_pre'
+EACH_PAGE_ITEM = 18
 
 APP_SETTING = {
     'debug': True,
@@ -19,5 +20,5 @@ APP_SETTING = {
     'static_path': os.path.join(os.path.dirname(__file__), 'static'),
     'template_path': os.path.join(os.path.dirname(__file__), 'template'),
     # "xsrf_cookies": True,
-    # 'cookie_secret': 'The_Art_Affect_The_Word.'
+    'cookie_secret': 'HUAYI_T39Z012KZU93'
 }

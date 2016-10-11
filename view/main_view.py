@@ -16,16 +16,22 @@ import uuid
 client = MongoClient('mongodb://localhost:27017/')  # 创建连接
 
 
-class IndexHandelr(tornado.web.RequestHandler):
-    def get(self, *args, **kwargs):
+class BaseHandler(tornado.web.RequestHandler):
+    def get_current_user(self):
+        return self.get_secure_cookie('user')
+
+
+class IndexHandelr(BaseHandler):
+    def get(self):
         self.render('index.html')
 
 
-class UploadHandler(tornado.web.RequestHandler):
+class UploadHandler(BaseHandler):
     def get(self):
         self.render('upload.html')
 
     # 处理文件上传
+    @tornado.web.authenticated
     def post(self):
         db = client.picture_manager
         file_metas = self.request.files['files']
@@ -111,7 +117,6 @@ class UploadHandler(tornado.web.RequestHandler):
     # 解析文件大小，并且返回用于现实的字符串
     @staticmethod
     def get_file_length(file):
-        print(len(file))
         length_kb = len(file) / 1024
         if length_kb < 1024:
             return str(length_kb) + "KB"
@@ -121,38 +126,51 @@ class UploadHandler(tornado.web.RequestHandler):
             return str(length_kb / (1024 * 1024)) + "GB"
 
 
-class SearchHandler(tornado.web.RequestHandler):
-    def get(self):
+class SearchHandler(BaseHandler):
+    @tornado.web.asynchronous
+    @tornado.web.authenticated
+    def post(self):
         db = client.picture_manager
-        search_keys = self.get_argument("search_keys").split(" ")
-        if len(search_keys) < 1:
-            self.write("错误,关键字不能为空.")
+        search_keys_str = self.get_argument("search_keys")
+        if not search_keys_str:
+            self.write(json_util.dumps({"message": "关键字不能为空"}))
+            self.finish()
+            return
 
-        page = self.get_argument('page', 1)
+        search_keys = search_keys_str.split(" ")
+
+        page = int(self.get_argument('page', 0) or 0)
+
+        start_date = self.get_argument("start_date")
+        end_date = self.get_argument("end_date")
+
         query_post = {
-            "$and": [{"upload_date": {"$gt": "2016-10-01"}}, {"upload_date": {"$lt": "2016-11-01"}},
-                     {"$or": [
-                         # {"file_name": {"$regex": 'a', "$options": "i"}}
-                     ]}
-                     ]
+            "$and": []
         }
 
+        if start_date and end_date:
+            query_post['$and'].append({"upload_date": {"$gte": start_date}})
+            query_post['$and'].append({"upload_date": {"$lt": end_date}})
+
+        search_key_or = {"$or": []}
         for search_key in search_keys:
-            query_post['$and'][2]['$or'].append({"file_name": {"$regex": search_key, "$options": "i"}})
-            query_post['$and'][2]['$or'].append({"tag": {"$regex": search_key, "$options": "i"}})
+            search_key_or['$or'].append({"file_name": {"$regex": search_key, "$options": "i"}})
+            search_key_or['$or'].append({"tag": {"$regex": search_key, "$options": "i"}})
 
-        result = db.picture.find(query_post)
+        query_post['$and'].append(search_key_or)
 
-        self.write(json_util.dumps(result))
+        result = db.picture.find(query_post).limit(config.EACH_PAGE_ITEM).skip(page * config.EACH_PAGE_ITEM)
+        self.write(json_util.dumps({"message": "succ", "data": result}))
+        self.finish()
 
 
-class ImageHandler(tornado.web.RequestHandler):
+class ImageHandler(BaseHandler):
     @tornado.web.asynchronous
     def get(self, id):
         image_id = ObjectId(id)
         db = client.picture_manager
         picture = db.picture.find_one({"_id": image_id})
-        self.set_header("content-type", "image/jpg")
+        self.set_header("Content-Type", "image/jpg")
         if os.path.exists(picture['preview_file_path']):
             self.write(open(picture['preview_file_path'], "rb").read())
         else:
@@ -161,7 +179,7 @@ class ImageHandler(tornado.web.RequestHandler):
         self.finish()
 
 
-class PictureHandler(tornado.web.RequestHandler):
+class PictureHandler(BaseHandler):
     @tornado.web.asynchronous
     def get(self, id):
         image_id = ObjectId(id)
@@ -173,3 +191,42 @@ class PictureHandler(tornado.web.RequestHandler):
         else:
             self.set_status(404)
         self.finish()
+
+
+class DownHandler(BaseHandler):
+    @tornado.web.asynchronous
+    def get(self, id):
+        image_id = ObjectId(id)
+        db = client.picture_manager
+        picture = db.picture.find_one({"_id": image_id})
+        self.set_header('Content-Type', 'application/octet-stream')
+        self.set_header('Content-Disposition', "attachment; filename=%s" % picture['file_name'])
+        if picture:
+            buf_size = 4096
+            with open(os.path.join('', picture['file_path']), 'rb') as f:
+                while True:
+                    data = f.read(buf_size)
+                    if not data:
+                        break
+                    self.write(data)
+        else:
+            self.set_status(404)
+        self.finish()
+
+
+class LoginHandler(BaseHandler):
+    @tornado.web.asynchronous
+    def post(self):
+        username = self.get_argument('username')
+        password = self.get_argument('password')
+        if username == "admin":
+            if password == "admin":
+                self.set_secure_cookie('user', 'admin', expires_days=None)
+                self.redirect('/')
+
+
+class LogoutHandler(BaseHandler):
+    @tornado.web.asynchronous
+    def get(self):
+        self.clear_cookie('user')
+        self.redirect('/')
