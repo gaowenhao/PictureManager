@@ -27,9 +27,18 @@
 
             $("#search-text").keypress(function (e) {
                 if (e.keyCode == 13) {
+                    $('#img_container').empty();
+                    $('#go_next input').val(0);
                     search()
                 }
             })
+
+            $(window).scroll(function () {
+                if ($(document).height() - $(document).scrollTop() <= document.documentElement.clientHeight) {
+                    search()
+                }
+            })
+
         })
         function popup_upload_window() {
             layer.open({
@@ -40,9 +49,48 @@
             })
         }
 
+        function login(_this) {
+            var username = $(_this).parent().find("input[name='username']").val()
+            var password = $(_this).parent().find("input[name='password']").val()
+            $.post("/login", {
+                        username: username, password: password
+                    }, function (data) {
+                        var response = eval('(' + data + ')');
+                        var message = response.message;
+                        if (message == "succ") {
+                            window.location.href = "/"
+                        } else {
+                            layer.msg(message)
+                        }
+                    }
+            )
+        }
+
+
+        function assign(_this) {
+            var username = $(_this).parent().find("input[name='username']").val()
+            var password = $(_this).parent().find("input[name='password']").val()
+            $.post("/assign_account", {
+                        username: username, password: password
+                    }, function (data) {
+                        var response = eval('(' + data + ')');
+                        var message = response.message;
+                        layer.msg(message)
+                    }
+            )
+        }
+
         function popup_login_window() {
-            layer.tips('<form action="/login" method="post"><input type="text" class="login_controller" placeholder=" 用户名" name="username" style="color:#34495E"/><input class="login_controller" style="margin-top:5px;color:#34495E" placeholder=" 密码" type="password" name="password"/> <input type="submit" class="header-button" style="width:150px; height:32px;margin-top:3px;"/></form>', "#login-button", {
+            layer.tips('<form><input type="text" class="login_controller" placeholder=" 用户名" name="username" style="color:#34495E"/><input class="login_controller" style="margin-top:5px;color:#34495E" placeholder=" 密码" type="password" name="password"/> <input value="登 录" type="button" onclick="login(this)" class="header-button" style="width:150px; height:32px;margin-top:3px;"/></form>', "#login-button", {
                 tips: 3,
+                closeBtn: true,
+                time: 0
+            })
+        }
+
+        function popup_assign_account_window() {
+            layer.tips('<form action="/assign_account" method="post"><input type="text" class="login_controller" placeholder=" 用户名" name="username" style="color:#34495E"/><input class="login_controller" style="margin-top:5px;color:#34495E" placeholder=" 密码" type="password" name="password"/> <input type="button" onclick="assign(this)"  value="分 配" class="header-button" style="width:150px; height:32px;margin-top:3px;"/></form>', "#assign_button", {
+                tips: 2,
                 closeBtn: true,
                 time: 0
             })
@@ -58,12 +106,12 @@
                 "start_date": start_date,
                 "end_date": end_date,
                 "page": function () {
-                    var value = $("#go_next input").val()
+                    var value = $("#go_next input").val();
                     return value
                 }
             }, function (data) {
                 var response = eval('(' + data + ')');
-                var message = response.message
+                var message = response.message;
                 if (message == "succ") {
                     for (var x = 0; x < response.data.length; x++) {
                         var img_container = document.getElementById("img_container");
@@ -71,13 +119,14 @@
                     }
 
                     $('#img_container > section').on('webkitAnimationEnd mozAnimationEnd MSAnimationEnd oanimationend animationend', function () {
-                        $(this).removeClass('animated')
+                        $(this).removeClass('animated');
                         $(this).addClass("image_vessel_h")
                     });
 
-                    $("#go_next").css("visibility", "visible")
-                    $("#go_next input").val($("#go_next input").val() + 1)
+                    $("#go_next").css("visibility", "visible");
+                    $("#go_next input").val(parseInt($("#go_next input").val()) + 1)
                 } else {
+                    $("#go_next").css("visibility", "hidden");
                     layer.msg(message)
                 }
             })
@@ -85,7 +134,7 @@
 
         function build_vessel(picture) {
             var image_vessel = document.createElement("section");
-            image_vessel.className = "image_vessel animated rollIn";
+            image_vessel.className = "image_vessel animated flipInX";
 
             var a = document.createElement("a");
             a.href = "/picture/" + picture._id.$oid;
@@ -137,6 +186,10 @@
         {%end%}
     </section>
     <section style="float:right;padding:5px;">
+        {% if current_user == "admin" %}
+        <input class="header-button" type="button" value="分配帐号" id="assign_button"
+               onclick="popup_assign_account_window()"/>
+        {% end%}
         <input id="upload-button" class="header-button" type="button" value="上 传"
                onclick="popup_upload_window()"/>
     </section>

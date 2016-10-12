@@ -12,6 +12,8 @@ import config
 import os
 import datetime
 import uuid
+import re
+import hashlib
 
 client = MongoClient('mongodb://localhost:27017/')  # 创建连接
 
@@ -132,18 +134,26 @@ class SearchHandler(BaseHandler):
     def post(self):
         db = client.picture_manager
         search_keys_str = self.get_argument("search_keys")
-        if not search_keys_str:
-            self.write(json_util.dumps({"message": "关键字不能为空"}))
+
+        if not search_keys_str or re.match('^\W', search_keys_str):
+            self.write(json_util.dumps({"message": "非法关键字"}))
             self.finish()
             return
 
-        search_keys = search_keys_str.split(" ")
+        search_keys_str_array = []
+        for val in search_keys_str:
+            if re.match('[\w | \s]+', val):
+                search_keys_str_array.append("%s" % val)
+            else:
+                search_keys_str_array.append("\\%s" % val)
 
-        page = int(self.get_argument('page', 0) or 0)
+        search_keys = "".join(search_keys_str_array).split(" ")  # 查询关键字
 
-        start_date = self.get_argument("start_date")
-        end_date = self.get_argument("end_date")
+        page = int(self.get_argument('page', 0) or 0)  # 页数
+        start_date = self.get_argument("start_date")  # 开始日期
+        end_date = self.get_argument("end_date")  # 结束如期
 
+        # 查询条件拼接
         query_post = {
             "$and": []
         }
@@ -160,7 +170,11 @@ class SearchHandler(BaseHandler):
         query_post['$and'].append(search_key_or)
 
         result = db.picture.find(query_post).limit(config.EACH_PAGE_ITEM).skip(page * config.EACH_PAGE_ITEM)
-        self.write(json_util.dumps({"message": "succ", "data": result}))
+
+        if result.count(with_limit_and_skip=True) > 0:
+            self.write(json_util.dumps({"message": "succ", "data": result}))
+        else:
+            self.write(json_util.dumps({"message": "没有更多了"}))
         self.finish()
 
 
@@ -222,7 +236,17 @@ class LoginHandler(BaseHandler):
         if username == "admin":
             if password == "admin":
                 self.set_secure_cookie('user', 'admin', expires_days=None)
-                self.redirect('/')
+                self.write(json_util.dumps({"message": "succ"}))
+        else:
+            db = client.picture_manager
+            user = db.account.find_one({"username": username})
+            if user and hashlib.sha1(hashlib.md5(password).hexdigest()).hexdigest() == user['password']:
+                self.set_secure_cookie('user', username, expires_days=None)
+                self.write(json_util.dumps({"message": "succ"}))
+            else:
+                self.write(json_util.dumps({"message": "用户名或密码错误,请重试！"}))
+
+        self.finish()
 
 
 class LogoutHandler(BaseHandler):
@@ -230,3 +254,19 @@ class LogoutHandler(BaseHandler):
     def get(self):
         self.clear_cookie('user')
         self.redirect('/')
+
+
+class AssignAccountHandler(BaseHandler):
+    @tornado.web.asynchronous
+    def post(self):
+        username = self.get_argument("username")
+        password = self.get_argument("password")
+        db = client.picture_manager
+        inserted_id = db.account.insert_one(
+            {'username': username, "password": hashlib.sha1(hashlib.md5(password).hexdigest()).hexdigest()})
+        if inserted_id:
+            self.write(json_util.dumps({"message": '分配成功！'}))
+        else:
+            self.write(json_util.dumps({"message": '分配失败！'}))
+
+        self.finish()

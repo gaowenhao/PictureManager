@@ -12,7 +12,7 @@ PORT = 8888
 # FILE_UPLOAD_PATH = '/home/vincent/UploadFile'
 FILE_UPLOAD_PATH = 'D://UploadFile'
 PREVIEW_FILE_POSTFIX = '_pre'
-EACH_PAGE_ITEM = 18
+EACH_PAGE_ITEM = 24
 
 APP_SETTING = {
     'debug': True,
