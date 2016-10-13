@@ -1,5 +1,6 @@
 html, body {
-    background-color: rgba(248, 248, 249, 1)
+    background-color: rgba(248, 248, 249, 1);
+    overflow: auto;
 }
 
 * {
@@ -9,6 +10,7 @@ html, body {
 
 #container {
     width: 100%;
+    height: auto;
     text-align: center;
 }
 
@@ -55,7 +57,7 @@ html, body {
     margin-left: 0px;
 }
 
-#upload-button {
+.header-button {
     height: 40px;
     border: none;
     width: 100px;
@@ -141,4 +143,34 @@ html, body {
     visibility: visible;
     opacity: 1;
     transition: opacity 0.5s;
+}
+
+.login_controller {
+    border: none;
+    width: 150px;
+    height: 30px;
+    border-radius: 0px;
+    margin: 0;
+    padding: 2px 7px;
+    corlor: #FF9901;
+    -webkit-transition: border-radius 1s;
+    -moz-transition: border-radius 1s;
+    -ms-transition: border-radius 1s;
+    -o-transition: border-radius 1s;
+    transition: border-radius 1s;
+}
+
+.login_controller:focus {
+    border: none;
+    border-radius: 15px;
+    -webkit-transition: border-radius 1s;
+    -moz-transition: border-radius 1s;
+    -ms-transition: border-radius 1s;
+    -o-transition: border-radius 1s;
+    transition: border-radius 1s;
+}
+
+@font-face {
+    font-family: "BlameV";
+    src: url("../font/BlameV.ttf");
 }
