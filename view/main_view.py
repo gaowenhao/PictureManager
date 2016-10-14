@@ -23,11 +23,13 @@ class BaseHandler(tornado.web.RequestHandler):
         return self.get_secure_cookie('user')
 
 
+# 主页转发
 class IndexHandelr(BaseHandler):
     def get(self):
         self.render('index.html')
 
 
+# 上传文件
 class UploadHandler(BaseHandler):
     def get(self):
         self.render('upload.html')
@@ -105,7 +107,6 @@ class UploadHandler(BaseHandler):
                 self.write(tornado.web.escape.json_encode({'message': 'successful'}))
             else:
                 self.write(tornado.web.escape.json_encode({'message': len(wrong_file)}))
-
             self.finish()
 
     # 线性查找源文件的预览文件
@@ -128,6 +129,7 @@ class UploadHandler(BaseHandler):
             return str(length_kb / (1024 * 1024)) + "GB"
 
 
+# 处理查询
 class SearchHandler(BaseHandler):
     @tornado.web.asynchronous
     @tornado.web.authenticated
@@ -153,7 +155,7 @@ class SearchHandler(BaseHandler):
         start_date = self.get_argument("start_date")  # 开始日期
         end_date = self.get_argument("end_date")  # 结束如期
 
-        # 查询条件拼接
+        # 查询条件拼接 ,匹配文件名和标签.
         query_post = {
             "$and": []
         }
@@ -178,6 +180,7 @@ class SearchHandler(BaseHandler):
         self.finish()
 
 
+# 获取预览图片
 class ImageHandler(BaseHandler):
     @tornado.web.asynchronous
     def get(self, id):
@@ -193,6 +196,7 @@ class ImageHandler(BaseHandler):
         self.finish()
 
 
+# 源文件下载页面
 class PictureHandler(BaseHandler):
     @tornado.web.asynchronous
     def get(self, id):
@@ -204,9 +208,10 @@ class PictureHandler(BaseHandler):
                         upload_date=picture['upload_date'])
         else:
             self.set_status(404)
-        self.finish()
+            self.finish()
 
 
+# 处理下载请求
 class DownHandler(BaseHandler):
     @tornado.web.asynchronous
     def get(self, id):
@@ -228,6 +233,7 @@ class DownHandler(BaseHandler):
         self.finish()
 
 
+# 处理登录请求
 class LoginHandler(BaseHandler):
     @tornado.web.asynchronous
     def post(self):
@@ -245,10 +251,10 @@ class LoginHandler(BaseHandler):
                 self.write(json_util.dumps({"message": "succ"}))
             else:
                 self.write(json_util.dumps({"message": "用户名或密码错误,请重试！"}))
-
         self.finish()
 
 
+# 处理登出请求
 class LogoutHandler(BaseHandler):
     @tornado.web.asynchronous
     def get(self):
@@ -256,6 +262,7 @@ class LogoutHandler(BaseHandler):
         self.redirect('/')
 
 
+# 分配帐号请求
 class AssignAccountHandler(BaseHandler):
     @tornado.web.asynchronous
     def post(self):
@@ -268,5 +275,4 @@ class AssignAccountHandler(BaseHandler):
             self.write(json_util.dumps({"message": '分配成功！'}))
         else:
             self.write(json_util.dumps({"message": '分配失败！'}))
-
         self.finish()
