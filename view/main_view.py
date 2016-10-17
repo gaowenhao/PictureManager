@@ -14,6 +14,7 @@ import datetime
 import uuid
 import re
 import hashlib
+from tornado import gen
 
 client = MongoClient('mongodb://localhost:27017/')  # 创建连接
 
@@ -36,8 +37,9 @@ class UploadHandler(BaseHandler):
 
     # 处理文件上传
     @tornado.web.authenticated
+    @gen.coroutine
     def post(self):
-        db = client.picture_manager
+        db = self.settings['db']
         file_metas = self.request.files['files']
         tags = self.get_argument('tags')  # 获取到客户端提交的tag标签
         wrong_file = []  # 保存各种原因未能上传成功的图
@@ -99,7 +101,7 @@ class UploadHandler(BaseHandler):
                                   "file_name": source_file_name,
                                   "file_length": UploadHandler.get_file_length(source_file['body'])}
 
-                db.picture.insert_one(source_picture)
+                yield db.picture.insert(source_picture)
             else:
                 wrong_file.append(source_file)
 
@@ -131,13 +133,12 @@ class UploadHandler(BaseHandler):
 
 # 处理查询
 class SearchHandler(BaseHandler):
-    @tornado.web.asynchronous
     @tornado.web.authenticated
+    @gen.coroutine
     def post(self):
-        db = client.picture_manager
         search_keys_str = self.get_argument("search_keys")
 
-        if not search_keys_str or re.match('^\W', search_keys_str):
+        if not search_keys_str or not re.match(u'^[^.]+[\u4e00-\u9fa5]*\w*', search_keys_str):
             self.write(json_util.dumps({"message": "非法关键字"}))
             self.finish()
             return
@@ -169,11 +170,17 @@ class SearchHandler(BaseHandler):
             search_key_or['$or'].append({"file_name": {"$regex": search_key, "$options": "i"}})
             search_key_or['$or'].append({"tag": {"$regex": search_key, "$options": "i"}})
 
+        db = self.settings['db']
         query_post['$and'].append(search_key_or)
 
-        result = db.picture.find(query_post).limit(config.EACH_PAGE_ITEM).skip(page * config.EACH_PAGE_ITEM)
+        result = []
+        cursor = db.picture.find(query_post).limit(config.EACH_PAGE_ITEM).skip(page * config.EACH_PAGE_ITEM)
 
-        if result.count(with_limit_and_skip=True) > 0:
+        while (yield cursor.fetch_next):
+            document = cursor.next_object()
+            result.append(document)
+
+        if len(result) > 0:
             self.write(json_util.dumps({"message": "succ", "data": result}))
         else:
             self.write(json_util.dumps({"message": "没有更多了"}))
@@ -182,11 +189,11 @@ class SearchHandler(BaseHandler):
 
 # 获取预览图片
 class ImageHandler(BaseHandler):
-    @tornado.web.asynchronous
+    @gen.coroutine
     def get(self, id):
         image_id = ObjectId(id)
-        db = client.picture_manager
-        picture = db.picture.find_one({"_id": image_id})
+        db = self.settings['db']
+        picture = yield db.picture.find_one({"_id": image_id})
         self.set_header("Content-Type", "image/jpg")
         if os.path.exists(picture['preview_file_path']):
             self.write(open(picture['preview_file_path'], "rb").read())
@@ -198,11 +205,11 @@ class ImageHandler(BaseHandler):
 
 # 源文件下载页面
 class PictureHandler(BaseHandler):
-    @tornado.web.asynchronous
+    @gen.coroutine
     def get(self, id):
         image_id = ObjectId(id)
-        db = client.picture_manager
-        picture = db.picture.find_one({"_id": image_id})
+        db = self.settings['db']
+        picture = yield db.picture.find_one({"_id": image_id})
         if picture:
             self.render(template_name='picture.html', id=id, tag=picture['tag'], file_name=picture['file_name'],
                         upload_date=picture['upload_date'])
@@ -213,11 +220,12 @@ class PictureHandler(BaseHandler):
 
 # 处理下载请求
 class DownHandler(BaseHandler):
-    @tornado.web.asynchronous
+    @tornado.web.authenticated
+    @gen.coroutine
     def get(self, id):
         image_id = ObjectId(id)
-        db = client.picture_manager
-        picture = db.picture.find_one({"_id": image_id})
+        db = self.settings['db']
+        picture = yield db.picture.find_one({"_id": image_id})
         self.set_header('Content-Type', 'application/octet-stream')
         self.set_header('Content-Disposition', "attachment; filename=%s" % picture['file_name'])
         if picture:
@@ -235,7 +243,7 @@ class DownHandler(BaseHandler):
 
 # 处理登录请求
 class LoginHandler(BaseHandler):
-    @tornado.web.asynchronous
+    @gen.coroutine
     def post(self):
         username = self.get_argument('username')
         password = self.get_argument('password')
@@ -244,8 +252,8 @@ class LoginHandler(BaseHandler):
                 self.set_secure_cookie('user', 'admin', expires_days=None)
                 self.write(json_util.dumps({"message": "succ"}))
         else:
-            db = client.picture_manager
-            user = db.account.find_one({"username": username})
+            db = self.settings['db']
+            user = yield db.account.find_one({"username": username})
             if user and hashlib.sha1(hashlib.md5(password).hexdigest()).hexdigest() == user['password']:
                 self.set_secure_cookie('user', username, expires_days=None)
                 self.write(json_util.dumps({"message": "succ"}))
@@ -264,12 +272,12 @@ class LogoutHandler(BaseHandler):
 
 # 分配帐号请求
 class AssignAccountHandler(BaseHandler):
-    @tornado.web.asynchronous
+    @gen.coroutine
     def post(self):
         username = self.get_argument("username")
         password = self.get_argument("password")
-        db = client.picture_manager
-        inserted_id = db.account.insert_one(
+        db = self.settings['db']
+        inserted_id = yield db.account.insert(
             {'username': username, "password": hashlib.sha1(hashlib.md5(password).hexdigest()).hexdigest()})
         if inserted_id:
             self.write(json_util.dumps({"message": '分配成功！'}))
