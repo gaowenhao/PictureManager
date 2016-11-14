@@ -4,19 +4,17 @@
     @email: vevz@163.com
     @description:  实现主要的功能
 """
-from pymongo import MongoClient
 from bson import ObjectId, json_util
-import tornado.escape
-import tornado.web
 import config
 import os
 import datetime
 import uuid
 import re
 import hashlib
-from tornado import gen
 
-client = MongoClient('mongodb://localhost:27017/')  # 创建连接
+import tornado.escape
+import tornado.web
+from tornado import gen
 
 
 class BaseHandler(tornado.web.RequestHandler):
@@ -109,7 +107,6 @@ class UploadHandler(BaseHandler):
                 self.write(tornado.web.escape.json_encode({'message': 'successful'}))
             else:
                 self.write(tornado.web.escape.json_encode({'message': len(wrong_file)}))
-            self.finish()
 
     # 线性查找源文件的预览文件
     @staticmethod
@@ -215,7 +212,6 @@ class PictureHandler(BaseHandler):
                         upload_date=picture['upload_date'])
         else:
             self.set_status(404)
-            self.finish()
 
 
 # 处理下载请求
@@ -247,13 +243,13 @@ class LoginHandler(BaseHandler):
     def post(self):
         username = self.get_argument('username')
         password = self.get_argument('password')
-        if username == "admin":
-            if password == "admin":
-                self.set_secure_cookie('user', 'admin', expires_days=None)
-                self.write(json_util.dumps({"message": "succ"}))
+        if username == "admin" and password == "admin":
+            self.set_secure_cookie('user', 'admin', expires_days=None)
+            self.write(json_util.dumps({"message": "succ"}))
         else:
             db = self.settings['db']
             user = yield db.account.find_one({"username": username})
+            # md5加密后sha-1加密
             if user and hashlib.sha1(hashlib.md5(password).hexdigest()).hexdigest() == user['password']:
                 self.set_secure_cookie('user', username, expires_days=None)
                 self.write(json_util.dumps({"message": "succ"}))
@@ -271,6 +267,7 @@ class LogoutHandler(BaseHandler):
 
 
 # 分配帐号请求
+
 class AssignAccountHandler(BaseHandler):
     @gen.coroutine
     def post(self):

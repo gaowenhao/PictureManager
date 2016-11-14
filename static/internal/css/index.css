@@ -169,8 +169,3 @@ html, body {
     -o-transition: border-radius 1s;
     transition: border-radius 1s;
 }
-
-@font-face {
-    font-family: "BlameV";
-    src: url("../../font/BlameV.ttf");
-}

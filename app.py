@@ -2,16 +2,18 @@
 """
     @author: gaowenhao
     @email: vevz@163.com
-    @description: 
+    @description:  这个模块主要负责组建和开启App
 """
 import tornado.web
+import tornado.ioloop
 from tornado.web import url as url
-import config
-from view import main_view as mv  # 主控制器简写
+
+from view import main_view as mv  # 主控制器
+import config  # 配置文件
 
 
 def build_application():
-    return tornado.web.Application([
+    return tornado.web.Application(handlers=[
         url(r'/', mv.IndexHandelr),  # 主页
         url(r'/upload', mv.UploadHandler),  # 文件上传
         url(r'/search', mv.SearchHandler),  # 文件搜索
@@ -26,5 +28,6 @@ def build_application():
 
 if __name__ == "__main__":
     application = build_application()
-    application.listen(config.PORT, max_body_size=5 * 1024 * 1024 * 1024)  # 最大限制为5GB  ，也就是一次上传文件最好不超过5GB
+    # 最大限制为5GB，也就是一次上传文件最好不超过5GB
+    application.listen(config.PORT, max_body_size=5 * 1024 * 1024 * 1024)
     tornado.ioloop.IOLoop.current().start()
