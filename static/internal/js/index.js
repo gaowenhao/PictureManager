@@ -58,12 +58,22 @@ function assign(_this) {
             var response = eval('(' + data + ')');
             var message = response.message;
             layer.msg(message)
+            layer.closeAll('tips')
         }
     )
 }
 
+function check_key(event, _this, action) {
+    if (event.keyCode == 13)
+        if (action == "login")
+            login(_this)
+        else if (action == "assign")
+            assign(_this)
+
+}
+
 function popup_login_window() {
-    layer.tips('<form><input type="text" class="login_controller" placeholder=" 用户名" name="username" style="color:#34495E"/><input class="login_controller" style="margin-top:5px;color:#34495E" placeholder=" 密码" type="password" name="password"/> <input value="登 录" type="button" onclick="login(this)" class="header-button" style="width:150px; height:32px;margin-top:3px;"/></form>', "#login-button", {
+    layer.tips('<form><input type="text" class="login_controller" placeholder=" 用户名"  name="username" style="color:#34495E" onkeypress="check_key(event, this, \'login\')"/><input class="login_controller" style="margin-top:5px;color:#34495E" placeholder=" 密码" type="password" name="password" onkeypress="check_key(event, this, \'login\')"/> <input value="登 录" type="button" onclick="login(this)" class="header-button" style="width:150px; height:32px;margin-top:3px;"/></form>', "#login-button", {
         tips: 3,
         closeBtn: true,
         time: 0
@@ -71,7 +81,7 @@ function popup_login_window() {
 }
 
 function popup_assign_account_window() {
-    layer.tips('<form action="/assign_account" method="post"><input type="text" class="login_controller" placeholder=" 用户名" name="username" style="color:#34495E"/><input class="login_controller" style="margin-top:5px;color:#34495E" placeholder=" 密码" type="password" name="password"/> <input type="button" onclick="assign(this)"  value="分 配" class="header-button" style="width:150px; height:32px;margin-top:3px;"/></form>', "#assign_button", {
+    layer.tips('<form action="/assign_account" method="post"><input type="text" onkeypress="check_key(event, this, \'assign\')" class="login_controller" placeholder=" 用户名" name="username" style="color:#34495E"/><input class="login_controller" style="margin-top:5px;color:#34495E" onkeypress="check_key(event, this, \'assign\')" placeholder=" 密码" type="password" name="password"/> <input type="button" onclick="assign(this)"  value="分 配" class="header-button" style="width:150px; height:32px;margin-top:3px;"/></form>', "#assign_button", {
         tips: 2,
         closeBtn: true,
         time: 0

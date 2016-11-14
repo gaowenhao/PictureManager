@@ -4,6 +4,7 @@
     @email: vevz@163.com
     @description:  实现主要的功能
 """
+from pymongo.errors import DuplicateKeyError
 from bson import ObjectId, json_util
 import config
 import os
@@ -137,7 +138,6 @@ class SearchHandler(BaseHandler):
 
         if not search_keys_str or not re.match(u'^[^.]+[\u4e00-\u9fa5]*\w*', search_keys_str):
             self.write(json_util.dumps({"message": "非法关键字"}))
-            self.finish()
             return
 
         search_keys_str_array = []
@@ -181,7 +181,6 @@ class SearchHandler(BaseHandler):
             self.write(json_util.dumps({"message": "succ", "data": result}))
         else:
             self.write(json_util.dumps({"message": "没有更多了"}))
-        self.finish()
 
 
 # 获取预览图片
@@ -197,7 +196,6 @@ class ImageHandler(BaseHandler):
         else:
             self.write(
                 open(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static/internal/404.jpg'), "rb").read())
-        self.finish()
 
 
 # 源文件下载页面
@@ -234,7 +232,6 @@ class DownHandler(BaseHandler):
                     self.write(data)
         else:
             self.set_status(404)
-        self.finish()
 
 
 # 处理登录请求
@@ -255,7 +252,6 @@ class LoginHandler(BaseHandler):
                 self.write(json_util.dumps({"message": "succ"}))
             else:
                 self.write(json_util.dumps({"message": "用户名或密码错误,请重试！"}))
-        self.finish()
 
 
 # 处理登出请求
@@ -274,10 +270,14 @@ class AssignAccountHandler(BaseHandler):
         username = self.get_argument("username")
         password = self.get_argument("password")
         db = self.settings['db']
-        inserted_id = yield db.account.insert(
-            {'username': username, "password": hashlib.sha1(hashlib.md5(password).hexdigest()).hexdigest()})
+        try:
+            inserted_id = yield db.account.insert(
+                {'username': username, "password": hashlib.sha1(hashlib.md5(password).hexdigest()).hexdigest()})
+        except DuplicateKeyError:
+            self.write(json_util.dumps({"message": '分配失败.'}))
+            return
+
         if inserted_id:
-            self.write(json_util.dumps({"message": '分配成功！'}))
+            self.write(json_util.dumps({"message": '分配成功.'}))
         else:
-            self.write(json_util.dumps({"message": '分配失败！'}))
-        self.finish()
+            self.write(json_util.dumps({"message": '分配失败.'}))
